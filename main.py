@@ -54,11 +54,10 @@ for file in audio_files:
     channel_frames = len(channel)
     if channel_frames > frames:
         frames = channel_frames
-    channels.append([channel])
+    channels.append(channel)
 
 # Pad to length
-channels = np.array([np.pad(channel, (0, frames - len(channel)), 'constant') for channel in channels])
-print(channels.shape)
+channels = [np.pad(channel, (0, frames - len(channel)), 'constant') for channel in channels]
 
 # Add channels
 R_channel = np.array([])
