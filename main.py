@@ -2,14 +2,13 @@
 All distances in mm."""
 
 import numpy as np
-import matplotlib.pyplot as plt
 import wave
 import struct
 
 head_width = 150
-R_pos = [-head_width / 2, 0]
-L_pos = [head_width / 2, 0]
 theta = 0
+R_pos = [-head_width / 2 * np.cos(theta), np.sin(theta)]
+L_pos = [head_width / 2, np.cos(theta), np.sin(theta)]
 positions = [[1000, 1000], [1000, 1000]]
 audio_files = ['1.wav', '2.wav']
 
@@ -45,19 +44,21 @@ def pcm_channels(file_name):
         bucket = index % num_channels
         channels[bucket].append(value)
 
-    return channels, num_frames
+    return channels
 
 
-channels = np.array([])
+channels = []
 frames = 0
 for file in audio_files:
-    channel, num_frames = pcm_channels(file)[0]
-    if num_frames > frames:
-        frames = num_frames
-    np.append(channels, channel)
+    channel = pcm_channels(file)[0]
+    channel_frames = len(channel)
+    if channel_frames > frames:
+        frames = channel_frames
+    channels.append([channel])
 
 # Pad to length
-
+channels = np.array([np.pad(channel, (0, frames - len(channel)), 'constant') for channel in channels])
+print(channels.shape)
 
 # Add channels
 R_channel = np.array([])
