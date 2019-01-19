@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Page to test random stuff</title>
+        <link rel="stylesheet" href="style.css">
+        
+        <!-- This is hte CSS part of the script -->
+        <style>
+            
+            html, body {
+                font-size: 62.5%;
+            }
+
+            .border{
+            position: absolute;
+                top: 10px;
+                left: 10px;
+            overflow: hidden;
+                display: block;
+            float: left;
+            width: 80%;
+            padding-bottom: 50%;
+            border: 5px black solid;
+
+            }
+            
+            #wav1{
+                position: absolute;
+                  border-radius: 50%;
+                  width: 20px;
+                  height: 20px;
+                  background:blue;
+                  left: 0px;
+                  top: 0px;
+                  /*transform: translate(-50%, -50%);*/
+            }
+            
+            .text {
+                position: absolute;
+                left: 10px;
+                top: 40vw;
+            }
+
+        </style>
+    </head>
+    
+    
+    <body>
+        
+        <div class="border">
+        <div id ="wav1"> </div>
+        <div id ="wav2"> </div>
+        <div id ="wav3"> </div>
+        </div>
+
+
+        
+        
+        <div class="text">
+        
+            <h1>Just testing this works!</h1>
+        <p id = "textout"></p>
+        <p id="demo"></p>
+        </div>
+        
+        
+        <script src="{{url_for('static', filename='index.js')}}"></script>
+        
+        
+        <!--
+ var txt = "";
+txt += "<p>innerWidth: " + window.innerWidth + "</p>";
+txt += "<p>innerHeight: " + window.innerHeight + "</p>";
+txt += "<p>outerWidth: " + window.outerWidth + "</p>";
+txt += "<p>outerHeight: " + window.outerHeight + "</p>";
+
+document.getElementById("demo").innerHTML = txt;
+-->
+        
+        
+    </body>
+</html>
