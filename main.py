@@ -57,16 +57,14 @@ for file in audio_files:
     channels.append(channel)
 
 # Pad to length
-channels = [np.pad(channel, (0, frames - len(channel)), 'constant') for channel in channels]
+channels = np.array([np.pad(channel, (0, frames - len(channel)), 'constant') for channel in channels])
 
 # Add channels
-R_channel = np.array([])
-L_channel = np.zeros(len(channels))
+output = np.zeros((2, frames))
 for position in positions:
     R_r2 = (position[0] - R_pos[0]) ** 2 + (position[1] - R_pos[1]) ** 2
     L_r2 = (position[0] - R_pos[0]) ** 2 + (position[1] - R_pos[1]) ** 2
-    R_channel += channels[0] / R_r2
-    L_channel += channels[1] / L_r2
+    output += channels /
 
 
 def signal_to_wav(channels, file_name):
