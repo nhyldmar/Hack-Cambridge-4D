@@ -2,15 +2,16 @@
 All distances in mm."""
 
 import numpy as np
+from scipy.io import wavfile
 import wave
 import struct
 
-head_width = 150
+head_width = 0.15
 theta = 0
 R_pos = [-head_width / 2 * np.cos(theta), np.sin(theta)]
 L_pos = [head_width / 2, np.cos(theta), np.sin(theta)]
-positions = [[1000, 1000], [1000, 1000]]
-audio_files = ['1.wav', '2.wav']
+positions = [[0, 2]]
+audio_files = ['1.wav']
 
 
 def pcm_channels(file_name):
@@ -59,26 +60,16 @@ for file in audio_files:
 # Pad to length
 channels = np.array([np.pad(channel, (0, frames - len(channel)), 'constant') for channel in channels])
 
-# Add channels
-output = np.zeros((2, frames))
+# Generate channels
+R_channel = np.zeros(frames)
+L_channel = np.zeros(frames)
 for position in positions:
+    i = positions.index(position)
     R_r2 = (position[0] - R_pos[0]) ** 2 + (position[1] - R_pos[1]) ** 2
-    L_r2 = (position[0] - R_pos[0]) ** 2 + (position[1] - R_pos[1]) ** 2
-    output += channels /
-
-
-def signal_to_wav(channels, file_name):
-    """"Given PCM channels and a file name,
-    save a .wav file of the audio.
-    """
-    data = struct.pack('<' + ('h' * len(channels)), *channels)
-    wav_file = wave.open(file_name, 'wb')
-    wav_file.setnchannels(len(channels))
-    wav_file.setsampwidth(2)
-    wav_file.setframerate(44100)
-    wav_file.writeframes(data)
-    wav_file.close()
+    L_r2 = (position[0] - L_pos[0]) ** 2 + (position[1] - L_pos[1]) ** 2
+    R_channel += channels[i] / R_r2
+    L_channel += channels[i] / L_r2
 
 
 # Write .wav file
-signal_to_wav([L_channel, R_channel], 'output.wav')
+wavfile.write('output.wav', 44100, np.asarray([L_channel, R_channel], dtype=np.int16).transpose())
