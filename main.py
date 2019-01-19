@@ -1,16 +1,18 @@
 """This is the doc file.
-All distances in mm."""
+All distances in m."""
 
 import numpy as np
 from scipy.io import wavfile
 import wave
 import struct
 
+speed_of_sound = 343
 head_width = 0.15
 theta = 0
-R_pos = [-head_width / 2 * np.cos(theta), np.sin(theta)]
-L_pos = [head_width / 2, np.cos(theta), np.sin(theta)]
-positions = [[0, 2]]
+head_pos = np.array([0, 0])
+R_pos = head_pos + [-head_width / 2 * np.cos(theta), np.sin(theta)]
+L_pos = head_pos + [head_width / 2 * np.cos(theta), np.sin(theta)]
+positions = [[-3, 0]]
 audio_files = ['1.wav']
 
 
@@ -67,9 +69,13 @@ for position in positions:
     i = positions.index(position)
     R_r2 = (position[0] - R_pos[0]) ** 2 + (position[1] - R_pos[1]) ** 2
     L_r2 = (position[0] - L_pos[0]) ** 2 + (position[1] - L_pos[1]) ** 2
+    phase_frames = int(abs(np.sqrt(R_r2) - np.sqrt(L_r2)) * 44100 / speed_of_sound)
     R_channel += channels[i] / R_r2
     L_channel += channels[i] / L_r2
-
+    if position[0] >= 0:
+        L_channel = np.concatenate((np.zeros(phase_frames), L_channel[:-phase_frames]))
+    else:
+        R_channel = np.concatenate((np.zeros(phase_frames), L_channel[:-phase_frames]))
 
 # Write .wav file
-wavfile.write('output.wav', 44100, np.asarray([L_channel, R_channel], dtype=np.int16).transpose())
+wavfile.write('output.wav', 44100, np.asarray([R_channel, L_channel], dtype=np.int16).transpose())
