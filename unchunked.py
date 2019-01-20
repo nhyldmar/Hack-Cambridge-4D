@@ -8,8 +8,8 @@ import struct
 speed_of_sound = 343
 framerate = 44100
 head_width = 0.15
-positions = np.array([[-3, 0], [2, 0]])
-audio_files = ['1.wav', '3.wav']
+positions = np.array([[-3, 3], [2, 0], [2, 2]])
+audio_files = ['1.wav', '3.wav', '4.wav']
 
 
 def pcm_channels(file_name):
@@ -70,13 +70,14 @@ r = np.linalg.norm(r, axis=2)
 
 # Add delay between channels
 delay_side = np.array([Rx > Lx for [Rx, Lx] in r])  # Find way to improve this
-delay_frames = np.abs(np.diff(r, axis=0)) * framerate / speed_of_sound
-delay_frames = np.asarray(*delay_frames, dtype=np.int16)
+delay_frames = np.array([abs(Rr - Lr) for [Rr, Lr] in r])
+delay_frames = delay_frames * framerate / speed_of_sound
+delay_frames = np.asarray(delay_frames, dtype=np.int16)
 RL_phased = np.repeat([channels], 2, axis=0)
 
 for i in range(RL_phased.shape[1]):  # Find way to improve this
     delay = delay_frames[i]
-    RL_phased[not delay_side[i], i] = np.concatenate((np.zeros(delay), RL_phased[0, i, delay:]))
+    RL_phased[delay_side[i] - 2, i] = np.concatenate((np.zeros(delay), RL_phased[0, i, delay:]))
 
 # Add volume drop off between channels
 r = np.repeat([r], RL_phased.shape[2], axis=2)
