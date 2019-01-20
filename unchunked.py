@@ -72,15 +72,13 @@ r = np.linalg.norm(r, axis=2)
 delay_side = np.array([Rx > Lx for [Rx, Lx] in r])  # Find way to improve this
 delay_frames = np.abs(np.diff(r, axis=0)) * framerate / speed_of_sound
 delay_frames = np.asarray(*delay_frames, dtype=np.int16)
-RL_phased = np.repeat([channels], 2, axis=0)  # [R, L]
+RL_phased = np.repeat([channels], 2, axis=0)
 
 for i in range(RL_phased.shape[1]):  # Find way to improve this
-    index = not delay_side[i]
     delay = delay_frames[i]
-    RL_phased[index, i] = np.concatenate((np.zeros(delay), RL_phased[0, i, delay:]))
+    RL_phased[not delay_side[i], i] = np.concatenate((np.zeros(delay), RL_phased[0, i, delay:]))
 
 # Add volume drop off between channels
-print(r)
 r = np.repeat([r], RL_phased.shape[2], axis=2)
 r = r.reshape(RL_phased.shape)
 RL_channels = RL_phased / r ** 2
