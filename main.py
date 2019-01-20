@@ -53,7 +53,7 @@ frames = 0
 for file in audio_files:
     channel = pcm_channels(file)
     channel = channel[0] + channel[1]
-    channel_frames = len(channel)
+    channel_frames = np.size(channel)
     if channel_frames > frames:
         frames = channel_frames
     channels.append(channel)
@@ -63,11 +63,11 @@ channels = np.array([np.pad(channel, (0, frames - len(channel)), 'constant') for
 
 theta = 0
 head_pos = np.array([0, 0])
-set_chunk_size = frames  # int(framerate / 100)
+set_chunk_size = np.int(framerate / 100)
 R_channel = np.array([])
 L_channel = np.array([])
-R_remnants = list(np.zeros((channels.shape[0], set_chunk_size)))
-L_remnants = list(np.zeros((channels.shape[0], set_chunk_size)))
+R_remnants = np.zeros((channels.shape[0], set_chunk_size))
+L_remnants = np.zeros((channels.shape[0], set_chunk_size))
 chunk_size = set_chunk_size
 
 while chunk_size:
@@ -77,29 +77,33 @@ while chunk_size:
     # Generate channels
     channels_chunk = channels[:, :chunk_size]
     channels = channels[:, chunk_size:]
-    chunk_frames = len(channels_chunk)
+    chunk_frames = np.size(channels_chunk)
     R_channel_chunk = np.zeros(chunk_frames)
     L_channel_chunk = np.zeros(chunk_frames)
+
     for position in positions:
         i = positions.index(position)
         channel_chunk = channels_chunk[i]
         R_phased_chunk = channel_chunk
         L_phased_chunk = channel_chunk
+
         R_r2 = (position[0] - R_pos[0]) ** 2 + (position[1] - R_pos[1]) ** 2
         L_r2 = (position[0] - L_pos[0]) ** 2 + (position[1] - L_pos[1]) ** 2
-        phase_frames = int(abs(np.sqrt(R_r2) - np.sqrt(L_r2)) * framerate / speed_of_sound)
+
+        phase_frames = np.int(np.abs(np.sqrt(R_r2) - np.sqrt(L_r2)) * framerate / speed_of_sound)
         if position[0] > 0:
-            L_phased_chunk, L_remnants[i] = np.concatenate((L_remnants[i], L_phased_chunk[:-phase_frames])), \
-                                            L_phased_chunk[chunk_size - phase_frames:]
+            L_phased_chunk = np.concatenate((L_remnants[i, phase_frames:], L_phased_chunk[:-phase_frames]))
+            L_remnants[i] = channel_chunk[chunk_size - phase_frames:]
         elif position[0] < 0:
-            R_phased_chunk, R_remnants[i] = np.concatenate((R_remnants[i], R_phased_chunk[:-phase_frames])), \
-                                            R_phased_chunk[chunk_size - phase_frames:]
+            R_phased_chunk = np.concatenate((R_remnants[i, phase_frames:], R_phased_chunk[:-phase_frames]))
+            R_remnants[i] = channel_chunk[chunk_size - phase_frames:]
+
         R_channel_chunk = R_channel_chunk + R_phased_chunk / R_r2
         L_channel_chunk = L_channel_chunk + L_phased_chunk / L_r2
 
     R_channel = np.concatenate((R_channel, R_channel_chunk))
     L_channel = np.concatenate((L_channel, L_channel_chunk))
-    chunk_size = min(set_chunk_size, channels.shape[1])
+    chunk_size = np.min(set_chunk_size, channels.shape[1])
 
     # Modifications
     theta += 0.03
