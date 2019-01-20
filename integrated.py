@@ -106,8 +106,5 @@ while chunk_size <= channels.shape[1]:
     # Modifications
     theta += 0.03
 
-    # Modifications
-    theta += 0.1
-
 # Write .wav file
 wavfile.write('output.wav', framerate, np.asarray([R_channel, L_channel], dtype=np.int16).transpose())
