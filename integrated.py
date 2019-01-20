@@ -10,7 +10,7 @@ speed_of_sound = 343
 framerate = 44100
 head_width = 0.15
 positions = [[3, 3]]
-audio_files = ['5.wav']
+audio_files = ['1.wav']
 
 
 def pcm_channels(file_name):
@@ -63,13 +63,13 @@ channels = np.array([np.pad(channel, (0, frames - len(channel)), 'constant') for
 
 theta = 0
 head_pos = np.array([0, 0])
-chunk_size = np.int(framerate / 10)
+chunk_size = np.int(framerate / 100)
 R_channel = np.array([])
 L_channel = np.array([])
 R_remnants = np.zeros((channels.shape[0], chunk_size))
 L_remnants = np.zeros((channels.shape[0], chunk_size))
 
-while chunk_size < channels.shape[1]:
+while chunk_size:
     R_pos = head_pos + [-head_width / 2 * np.cos(theta), np.sin(theta)]
     L_pos = head_pos + [head_width / 2 * np.cos(theta), np.sin(theta)]
 
@@ -89,7 +89,6 @@ while chunk_size < channels.shape[1]:
         R_r2 = (position[0] - R_pos[0]) ** 2 + (position[1] - R_pos[1]) ** 2
         L_r2 = (position[0] - L_pos[0]) ** 2 + (position[1] - L_pos[1]) ** 2
 
-        # Add phase delay between channels
         phase_frames = np.int(np.abs(np.sqrt(R_r2) - np.sqrt(L_r2)) * framerate / speed_of_sound)
         if position[0] > 0:
             L_phased_chunk = np.concatenate((L_remnants[i, phase_frames:], L_phased_chunk[chunk_size - phase_frames:]))
@@ -103,6 +102,8 @@ while chunk_size < channels.shape[1]:
 
     R_channel = np.append(R_channel, R_channel_chunk)
     L_channel = np.append(L_channel, L_channel_chunk)
+    if chunk_size > channels.shape[1]:
+        break
 
     # Modifications
     theta += 0.1
