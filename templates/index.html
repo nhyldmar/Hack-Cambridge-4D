@@ -2,8 +2,7 @@
 <html>
     <head>
         <title>Page to test random stuff</title>
-        <link rel="stylesheet" href="style.css">
-        
+      
         <!-- This is hte CSS part of the script -->
         <style>
             
@@ -13,13 +12,26 @@
 
             .border{
             position: absolute;
-                top: 10px;
+                top: 30px;
                 left: 10px;
             overflow: hidden;
                 display: block;
             float: left;
-            width: 80%;
-            padding-bottom: 50%;
+            width: 400px;
+            padding-bottom: 400px;
+            border: 5px black solid;
+
+            }
+            
+            .selecter{
+            position: absolute;
+                top: 470px;
+                left: 10px;
+            overflow: hidden;
+                display: block;
+            float: left;
+            width: 400px;
+            padding-bottom: 80px;
             border: 5px black solid;
 
             }
@@ -30,41 +42,207 @@
                   width: 20px;
                   height: 20px;
                   background:blue;
-                  left: 0px;
-                  top: 0px;
+                  left: 990px;
+                  top: 990px;
+                  border: 0px yellow solid;
+                  /*transform: translate(-50%, -50%);*/
+            }
+            #wav2{
+                position: absolute;
+                  border-radius: 50%;
+                  width: 20px;
+                  height: 20px;
+                  background:red;
+                  left: 990px;
+                  top: 990px;
+                  /*transform: translate(-50%, -50%);*/
+            }
+            #wav3{
+                position: absolute;
+                  border-radius: 50%;
+                  width: 20px;
+                  height: 20px;
+                  background:green;
+                  left: 990px;
+                  top: 990px;
                   /*transform: translate(-50%, -50%);*/
             }
             
+            #but1{
+                position: absolute;
+                left: 40px;
+                top: 490px;
+            }
+            #but2{
+                position: absolute;
+                left: 100px;
+                top: 490px;
+            }
+            #but3{
+                position: absolute;
+                left: 160px;
+                top: 490px;
+            }
+            #but4{
+                position: absolute;
+                left: 220px;
+                top: 490px;
+            }
+            #but5{
+                position: absolute;
+                left: 320px;
+                top: 490px;
+            }
+            
+            
             .text {
                 position: absolute;
-                left: 10px;
-                top: 40vw;
+                left: 50px;
+                top: 510px;
             }
 
+            #cross {
+              position: absolute;
+                  border-radius: 50%;
+                  width: 20px;
+                  height: 20px;
+                  background:black;
+                  left: 190px;
+                  top: 190px;
+            }
+            
+          
         </style>
+        
+        
+        
+        
     </head>
     
     
     <body>
         
+        <h1> Wav file location selector</h1> 
         <div class="border">
         <div id ="wav1"> </div>
         <div id ="wav2"> </div>
         <div id ="wav3"> </div>
+        <div id ="cross"> </div>
         </div>
-
-
+        
+    
+        <div class="selecter"></div>
+        <button id = "but1" onclick="ChangeSelected(this.name)" name = "1">Wav 1</button>
+        <button id = "but2" onclick="ChangeSelected(this.name)" name = 2>Wav 2</button>    
+        <button id = "but3" onclick="ChangeSelected(this.name)" name = 3>Wav 3</button>
+        <button id = "but4" onclick="delete_wav()">Delete</button>
+        <button id = "but5" onclick="doRequest()">Enter</button>
         
         
         <div class="text">
         
-            <h1>Just testing this works!</h1>
-        <p id = "textout"></p>
-        <p id="demo"></p>
-        </div>
+        <h1>Blue = wav 1, Red = wav 2, Green = wav 3</h1>
+        <h1 id ="currwav"></h1>
+        <h1 id = "textout"></h1>
+        </div> 
         
         
-        <script src="{{url_for('static', filename='index.js')}}"></script>
+        <script>
+            
+            var pos_store = [[null,null], [null,null], [null,null]];
+            var exist = [0,0,0]
+            
+            
+            var radius = 10;
+
+            var selected = "None"
+            document.getElementById("currwav").innerHTML = selected + " selected";
+
+            function ifclicked(event) {
+                /*document.body.textContent =
+                "clientX: " + event.clientX +
+                " - clientY: " + event.clientY;
+                */
+                
+            
+                var mouse = new Array(event.clientX - 10, event.clientY - 30);
+                
+                if(selected != "None" && exist[Number(selected)-1] != 0)
+                    {
+                        var wavfile = document.getElementById("wav" + selected);
+                    
+                        if(mouse[0] < 400 && mouse [1] < 400)
+                        {
+                            wavfile.style.top = (mouse[1]-10) + "px";
+                            wavfile.style.left = (mouse[0]-10) + "px";
+
+                            pos_store[Number(selected)-1]=[mouse[1]-10,mouse[0]-10]
+                        }
+                        
+                    }
+                //document.getElementById("textout").innerHTML = pos_store
+            }
+
+            function doRequest() {
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function() {
+                    if (this.readyState == 4 && this.status == 200) {
+                       // when the request is completed
+                       // alert("XMLHTTPRequest sent.")
+                    }
+                };
+                
+                var output = ""
+                for (i = 0; i < 3; i++) {
+                    if(exist[i] != 0)
+                        {
+                            output += String(i) + "i=" + String(pos_store[i][0]) + "&" +String(i) + "j=" + String(pos_store[i][1]) + "&";
+                        }
+                    else
+                        {
+                            output += String(i) + "i=-1&" +String(i) + "j=-1&";
+                        }
+                }
+                output = output.slice(0,-1);
+                
+                
+                //document.getElementById("currwav").innerHTML = output;
+                xhttp.open("GET", "/data?" + output, true);
+                xhttp.send();
+            }
+            
+            function ChangeSelected(name){
+                
+                document.getElementById("currwav").innerHTML = "wav" + name + " is selected";
+                selected = name;
+                
+                if(exist[Number(name)-1] == 0)
+                {
+                    document.getElementById("currwav").innerHTML = "wav" + name + " is selected";
+                    exist[Number(name)-1] = 1
+                    var wavfile = document.getElementById("wav" + selected);
+                    wavfile.style.top = "0px";
+                    wavfile.style.left = "0px";
+                }
+            }
+
+
+            function delete_wav(){
+                if(selected != "None")
+                    {
+                        var wavfile = document.getElementById("wav" + selected);
+                        wavfile.style.top = "700px";
+                        wavfile.style.left = "700px";
+                        exist[Number(selected)-1] = 0;
+                    }
+                
+            }
+            
+            document.addEventListener("click", ifclicked);
+
+
+        </script>
+        
         
         
         <!--
