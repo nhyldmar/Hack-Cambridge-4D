@@ -2,15 +2,14 @@
 
 import numpy as np
 from scipy.io import wavfile
-from scipy.ndimage import shift
 import wave
 import struct
 
 speed_of_sound = 343
 framerate = 44100
 head_width = 0.15
-positions = np.array([[-4, 0], [3, 0]])
-audio_files = ['1.wav', '5.wav']
+positions = np.array([[-3, 0], [2, 0]])
+audio_files = ['1.wav', '3.wav']
 
 
 def pcm_channels(file_name):
@@ -74,15 +73,20 @@ delay_side = np.array([Rx > Lx for [Rx, Lx] in r])  # Find way to improve this
 delay_frames = np.abs(np.diff(r, axis=0)) * framerate / speed_of_sound
 delay_frames = np.asarray(*delay_frames, dtype=np.int16)
 RL_phased = np.repeat([channels], 2, axis=0)  # [R, L]
-RL_phased[delay_side - 1] = np.array([shift(RL_phased[delay - 1], delay_frames, cval=0) for delay in delay_side])  #
-# Find way to improve this
+
+for i in range(RL_phased.shape[1]):  # Find way to improve this
+    index = not delay_side[i]
+    delay = delay_frames[i]
+    RL_phased[index, i] = np.concatenate((np.zeros(delay), RL_phased[0, i, delay:]))
 
 # Add volume drop off between channels
-r = np.array([r, ]) * RL_phased.shape[2]
-RL_channels = RL_phased / (r.transpose() ** 2)
+print(r)
+r = np.repeat([r], RL_phased.shape[2], axis=2)
+r = r.reshape(RL_phased.shape)
+RL_channels = RL_phased / r ** 2
 
 RL_channels = np.sum(RL_channels, axis=1)
-RL_channels = np.asarray(RL_channels, dtype=np.int16).transpose()
+RL_channels = np.asarray(RL_channels, dtype=np.int16).T
 
 # Write .wav file
 wavfile.write('output.wav', framerate, RL_channels)
