@@ -9,7 +9,7 @@ import struct
 speed_of_sound = 343
 framerate = 44100
 head_width = 0.15
-positions = [[3, 3]]
+positions = [[3, 0]]
 audio_files = ['5.wav']
 
 
@@ -51,8 +51,8 @@ def pcm_channels(file_name):
 channels = []
 frames = 0
 for file in audio_files:
-    channel = pcm_channels(file)
-    channel = channel[0] + channel[1]
+    channel = np.array(pcm_channels(file))
+    channel = np.sum(channel, axis=0)
     channel_frames = np.size(channel)
     if channel_frames > frames:
         frames = channel_frames
@@ -63,22 +63,21 @@ channels = np.array([np.pad(channel, (0, frames - len(channel)), 'constant') for
 
 theta = 0
 head_pos = np.array([0, 0])
-chunk_size = np.int(framerate / 10)
+chunk_size = np.int(framerate / 100)
 R_channel = np.array([])
 L_channel = np.array([])
 R_remnants = np.zeros((channels.shape[0], chunk_size))
 L_remnants = np.zeros((channels.shape[0], chunk_size))
 
-while chunk_size < channels.shape[1]:
+while chunk_size <= channels.shape[1]:
     R_pos = head_pos + [-head_width / 2 * np.cos(theta), np.sin(theta)]
     L_pos = head_pos + [head_width / 2 * np.cos(theta), np.sin(theta)]
 
     # Generate channels
     channels_chunk = channels[:, :chunk_size]
     channels = channels[:, chunk_size:]
-    chunk_frames = np.size(channels_chunk)
-    R_channel_chunk = np.zeros(chunk_frames)
-    L_channel_chunk = np.zeros(chunk_frames)
+    R_channel_chunk = np.zeros(chunk_size)
+    L_channel_chunk = np.zeros(chunk_size)
 
     for position in positions:
         i = positions.index(position)
@@ -105,7 +104,7 @@ while chunk_size < channels.shape[1]:
     L_channel = np.append(L_channel, L_channel_chunk)
 
     # Modifications
-    theta += 0.1
+    theta += 0.03
 
 # Write .wav file
 wavfile.write('output.wav', framerate, np.asarray([R_channel, L_channel], dtype=np.int16).transpose())
