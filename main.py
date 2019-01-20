@@ -9,7 +9,7 @@ import struct
 speed_of_sound = 343
 framerate = 44100
 head_width = 0.15
-positions = [[2, 2]]
+positions = [[3, 3]]
 audio_files = ['1.wav']
 
 
@@ -63,12 +63,11 @@ channels = np.array([np.pad(channel, (0, frames - len(channel)), 'constant') for
 
 theta = 0
 head_pos = np.array([0, 0])
-set_chunk_size = np.int(framerate / 100)
+chunk_size = np.int(framerate / 100)
 R_channel = np.array([])
 L_channel = np.array([])
-R_remnants = np.zeros((channels.shape[0], set_chunk_size))
-L_remnants = np.zeros((channels.shape[0], set_chunk_size))
-chunk_size = set_chunk_size
+R_remnants = np.zeros((channels.shape[0], chunk_size))
+L_remnants = np.zeros((channels.shape[0], chunk_size))
 
 while chunk_size:
     R_pos = head_pos + [-head_width / 2 * np.cos(theta), np.sin(theta)]
@@ -92,21 +91,22 @@ while chunk_size:
 
         phase_frames = np.int(np.abs(np.sqrt(R_r2) - np.sqrt(L_r2)) * framerate / speed_of_sound)
         if position[0] > 0:
-            L_phased_chunk = np.concatenate((L_remnants[i, phase_frames:], L_phased_chunk[:-phase_frames]))
-            L_remnants[i] = channel_chunk[chunk_size - phase_frames:]
+            L_phased_chunk = np.concatenate((L_remnants[i, phase_frames:], L_phased_chunk[chunk_size - phase_frames:]))
+            L_remnants[i] = np.pad(channel_chunk[:phase_frames], (0, chunk_size - phase_frames), 'constant')
         elif position[0] < 0:
-            R_phased_chunk = np.concatenate((R_remnants[i, phase_frames:], R_phased_chunk[:-phase_frames]))
-            R_remnants[i] = channel_chunk[chunk_size - phase_frames:]
+            R_phased_chunk = np.concatenate((R_remnants[i, phase_frames:], R_phased_chunk[chunk_size - phase_frames:]))
+            R_remnants[i] = np.pad(channel_chunk[:phase_frames], (0, chunk_size - phase_frames), 'constant')
 
         R_channel_chunk = R_channel_chunk + R_phased_chunk / R_r2
         L_channel_chunk = L_channel_chunk + L_phased_chunk / L_r2
 
-    R_channel = np.concatenate((R_channel, R_channel_chunk))
-    L_channel = np.concatenate((L_channel, L_channel_chunk))
-    chunk_size = np.min(set_chunk_size, channels.shape[1])
+    R_channel = np.append(R_channel, R_channel_chunk)
+    L_channel = np.append(L_channel, L_channel_chunk)
+    if chunk_size > channels.shape[1]:
+        break
 
     # Modifications
-    theta += 0.03
+    theta += 0.1
 
 # Write .wav file
 wavfile.write('output.wav', framerate, np.asarray([R_channel, L_channel], dtype=np.int16).transpose())
