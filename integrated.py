@@ -69,16 +69,15 @@ L_channel = np.array([])
 R_remnants = np.zeros((channels.shape[0], chunk_size))
 L_remnants = np.zeros((channels.shape[0], chunk_size))
 
-while chunk_size:
+while chunk_size <= channels.shape[1]:
     R_pos = head_pos + [-head_width / 2 * np.cos(theta), np.sin(theta)]
     L_pos = head_pos + [head_width / 2 * np.cos(theta), np.sin(theta)]
 
     # Generate channels
     channels_chunk = channels[:, :chunk_size]
     channels = channels[:, chunk_size:]
-    chunk_frames = np.size(channels_chunk)
-    R_channel_chunk = np.zeros(chunk_frames)
-    L_channel_chunk = np.zeros(chunk_frames)
+    R_channel_chunk = np.zeros(chunk_size)
+    L_channel_chunk = np.zeros(chunk_size)
 
     for position in positions:
         i = positions.index(position)
@@ -89,6 +88,7 @@ while chunk_size:
         R_r2 = (position[0] - R_pos[0]) ** 2 + (position[1] - R_pos[1]) ** 2
         L_r2 = (position[0] - L_pos[0]) ** 2 + (position[1] - L_pos[1]) ** 2
 
+        # Add phase delay between channels
         phase_frames = np.int(np.abs(np.sqrt(R_r2) - np.sqrt(L_r2)) * framerate / speed_of_sound)
         if position[0] > 0:
             L_phased_chunk = np.concatenate((L_remnants[i, phase_frames:], L_phased_chunk[chunk_size - phase_frames:]))
@@ -102,8 +102,9 @@ while chunk_size:
 
     R_channel = np.append(R_channel, R_channel_chunk)
     L_channel = np.append(L_channel, L_channel_chunk)
-    if chunk_size > channels.shape[1]:
-        break
+
+    # Modifications
+    theta += 0.03
 
     # Modifications
     theta += 0.1
